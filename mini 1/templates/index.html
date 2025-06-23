@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Forecasting - Advanced ARIMA Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📈</text></svg>">
+</head>
+<body>
+    <div class="background-container">
+        <div class="container">
+            <div class="header">
+                <h1>📈 Stock Data Forecasting</h1>
+                <p class="subtitle">Predict future stock prices with advanced ARIMA forecasting models</p>
+            </div>
+            
+            <form method="POST" class="form-container" id="stockForm">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="company1">First Company Symbol:</label>
+                        <input type="text" id="company1" name="company1" placeholder="e.g., AAPL" required 
+                               value="{{ company1 if company1 else '' }}" maxlength="10">
+                    </div>
+                    <div class="input-group">
+                        <label for="company2">Second Company Symbol:</label>
+                        <input type="text" id="company2" name="company2" placeholder="e.g., MSFT" required 
+                               value="{{ company2 if company2 else '' }}" maxlength="10">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="start_date">Start Date:</label>
+                        <input type="date" id="start_date" name="start_date" required 
+                               value="{{ request.form.get('start_date', '2023-01-01') }}">
+                    </div>
+                    <div class="input-group">
+                        <label for="end_date">End Date:</label>
+                        <input type="date" id="end_date" name="end_date" required 
+                               value="{{ request.form.get('end_date', '2024-01-01') }}">
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    <span class="btn-text">Generate Forecast</span>
+                    <span class="btn-loading" style="display: none;">Analyzing...</span>
+                </button>
+            </form>
+
+            {% if combined_forecast_plot_url %}
+            <div class="result-container">
+                <div class="summary-section">
+                    <h2>📊 Analysis Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <h3>{{ company1 }}</h3>
+                            <p class="price">${{ current_price1 }}</p>
+                            <span class="label">Current Price</span>
+                        </div>
+                        <div class="summary-card">
+                            <h3>{{ company2 }}</h3>
+                            <p class="price">${{ current_price2 }}</p>
+                            <span class="label">Current Price</span>
+                        </div>
+                        <div class="summary-card best-pick">
+                            <h3>🏆 Best Pick</h3>
+                            <p class="recommendation">{{ best_company }}</p>
+                            <span class="label">Based on Current Price</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="plot-container">
+                        <h2>📈 Combined Forecast Analysis</h2>
+                        <div class="chart-wrapper">
+                            <img src="data:image/png;base64,{{ combined_forecast_plot_url }}" 
+                                 alt="Combined Forecast Comparison Chart" 
+                                 loading="lazy">
+                        </div>
+                    </div>
+                    
+                    <div class="individual-charts">
+                        <div class="plot-container">
+                            <h2>{{ company1 }} Forecast</h2>
+                            <div class="chart-wrapper">
+                                <img src="data:image/png;base64,{{ company1_forecast_plot_url }}" 
+                                     alt="{{ company1 }} Individual Forecast Chart" 
+                                     loading="lazy">
+                            </div>
+                        </div>
+                        
+                        <div class="plot-container">
+                            <h2>{{ company2 }} Forecast</h2>
+                            <div class="chart-wrapper">
+                                <img src="data:image/png;base64,{{ company2_forecast_plot_url }}" 
+                                     alt="{{ company2 }} Individual Forecast Chart" 
+                                     loading="lazy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% elif error_message %}
+            <div class="error-message">
+                <div class="error-icon">⚠️</div>
+                <div class="error-content">
+                    <h3>Analysis Error</h3>
+                    <p>{{ error_message }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Form submission loading state
+        document.getElementById('stockForm').addEventListener('submit', function() {
+            const submitBtn = this.querySelector('.submit-btn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoading = submitBtn.querySelector('.btn-loading');
+            
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+        });
+
+        // Input validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            
+            // Set max date to today
+            const today = new Date().toISOString().split('T')[0];
+            startDate.max = today;
+            endDate.max = today;
+            
+            // Validate date range
+            function validateDates() {
+                if (startDate.value && endDate.value) {
+                    const start = new Date(startDate.value);
+                    const end = new Date(endDate.value);
+                    
+                    if (start >= end) {
+                        endDate.setCustomValidity('End date must be after start date');
+                    } else {
+                        endDate.setCustomValidity('');
+                    }
+                }
+            }
+            
+            startDate.addEventListener('change', validateDates);
+            endDate.addEventListener('change', validateDates);
+        });
+    </script>
+</body>
+</html>
