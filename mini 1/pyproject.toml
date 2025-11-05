@@ -10,6 +10,5 @@ dependencies = [
     "numpy",
     "matplotlib",
     "statsmodels",
-    "pmdarima",
     "gunicorn",
 ]

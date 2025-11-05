@@ -11,7 +11,6 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
-import pmdarima as pm
 
 # Configure logging for debugging
 logging.basicConfig(level=logging.INFO)
@@ -34,19 +33,16 @@ def get_arima_forecast(data, company_symbol):
     try:
         df = data[['Close']].dropna()
         if len(df) < 20:
-            return None, None, None, "Insufficient data for forecasting. Please select a longer date range (at least 20 trading days)."
+            return None, None, None, None, "Insufficient data for forecasting. Please select a longer date range (at least 20 trading days)."
 
-        # Use pmdarima to find the best ARIMA model
-        model = pm.auto_arima(df['Close'], seasonal=False, stepwise=True, suppress_warnings=True,
-                              error_action='ignore', max_p=5, max_q=5, max_d=2)
-        
         train_size = int(len(df) * 0.8)
         train, test = df.iloc[:train_size], df.iloc[train_size:]
         
-        model.fit(train['Close'])
+        model = ARIMA(train['Close'], order=(1, 1, 2))
+        model_fit = model.fit()
         
         forecast_steps = len(test) if len(test) > 0 else int(len(df) * 0.2)
-        forecast = model.predict(n_periods=forecast_steps)
+        forecast = model_fit.forecast(steps=forecast_steps)
         
         test_index = test.index if len(test) > 0 else pd.date_range(start=df.index[-1], periods=forecast_steps + 1, freq='D')[1:]
         

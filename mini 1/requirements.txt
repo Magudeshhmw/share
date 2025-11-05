@@ -4,5 +4,4 @@ pandas
 numpy
 matplotlib
 statsmodels
-pmdarima
 gunicorn
